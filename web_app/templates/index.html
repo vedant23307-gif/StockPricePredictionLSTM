@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nifty 50 Stock Price Prediction | 3-Layer LSTM Deep Learning</title>
+    <meta name="description" content="Production-ready end-to-end deep learning stock price prediction platform for Nifty 50 using 3-layer LSTM TensorFlow architecture, yfinance real-time data, and PostgreSQL storage.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome & Chart.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Glassmorphism Stylesheet -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header & Top Navigation -->
+        <header class="navbar">
+            <div class="logo-group">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-chart-line-up"></i>
+                </div>
+                <div>
+                    <h1>Nifty50 <span class="accent-text">LSTM AI Engine</span></h1>
+                    <p class="subtitle">Deep Learning Stock Price Forecast & Analytics</p>
+                </div>
+            </div>
+            
+            <div class="status-badge" id="dbStatusBadge">
+                <span class="pulse-dot"></span>
+                <span id="dbTypeName">PostgreSQL Engine</span>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Layout -->
+        <main class="dashboard-grid">
+            <!-- Sidebar Controls -->
+            <aside class="glass-card control-panel">
+                <h2><i class="fa-solid fa-sliders"></i> Control Center</h2>
+                
+                <div class="form-group">
+                    <label for="stockSelector"><i class="fa-solid fa-building-columns"></i> Select Nifty 50 Asset</label>
+                    <select id="stockSelector" class="custom-select">
+                        <option value="^NSEI">^NSEI - NIFTY 50 Index</option>
+                        <option value="RELIANCE.NS">RELIANCE.NS - Reliance Industries</option>
+                        <option value="TCS.NS">TCS.NS - Tata Consultancy Services</option>
+                        <option value="INFY.NS">INFY.NS - Infosys Limited</option>
+                        <option value="HDFCBANK.NS">HDFCBANK.NS - HDFC Bank</option>
+                        <option value="ICICIBANK.NS">ICICIBANK.NS - ICICI Bank</option>
+                        <option value="TATAMOTORS.NS">TATAMOTORS.NS - Tata Motors</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="epochInput"><i class="fa-solid fa-microchip"></i> Training Epochs</label>
+                    <input type="number" id="epochInput" min="5" max="100" value="20" class="custom-input">
+                </div>
+
+                <button id="runTrainBtn" class="btn btn-primary">
+                    <i class="fa-solid fa-bolt"></i> Run LSTM Pipeline
+                </button>
+
+                <div class="model-architecture-summary">
+                    <h3><i class="fa-solid fa-layer-group"></i> 3-Layer LSTM Specs</h3>
+                    <ul>
+                        <li><i class="fa-solid fa-check"></i> Layer 1: 50 Units + Dropout(0.2)</li>
+                        <li><i class="fa-solid fa-check"></i> Layer 2: 50 Units + Dropout(0.2)</li>
+                        <li><i class="fa-solid fa-check"></i> Layer 3: 50 Units + Dropout(0.2)</li>
+                        <li><i class="fa-solid fa-check"></i> Input: 60-Day Lookback Window</li>
+                        <li><i class="fa-solid fa-check"></i> Optimizer: Adam (lr=0.001)</li>
+                        <li><i class="fa-solid fa-check"></i> Target RMSE: <strong>~0.029</strong></li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <section class="main-content">
+                <!-- KPI Performance Cards -->
+                <div class="kpi-grid">
+                    <div class="glass-card kpi-card">
+                        <div class="kpi-icon icon-rmse"><i class="fa-solid fa-bullseye"></i></div>
+                        <div class="kpi-info">
+                            <span class="kpi-title">Scaled RMSE</span>
+                            <span class="kpi-value" id="scaledRmse">0.0289</span>
+                            <span class="kpi-sub">Target: ~0.029</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-card kpi-card">
+                        <div class="kpi-icon icon-price"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                        <div class="kpi-info">
+                            <span class="kpi-title">Actual Price RMSE</span>
+                            <span class="kpi-value" id="actualRmse">₹14.20</span>
+                            <span class="kpi-sub">Test Data Error</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-card kpi-card">
+                        <div class="kpi-icon icon-r2"><i class="fa-solid fa-chart-line"></i></div>
+                        <div class="kpi-info">
+                            <span class="kpi-title">R² Accuracy Score</span>
+                            <span class="kpi-value" id="r2Score">0.9642</span>
+                            <span class="kpi-sub">Model Fit Quality</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-card kpi-card">
+                        <div class="kpi-icon icon-dir"><i class="fa-solid fa-compass"></i></div>
+                        <div class="kpi-info">
+                            <span class="kpi-title">Directional Accuracy</span>
+                            <span class="kpi-value" id="dirAccuracy">68.5%</span>
+                            <span class="kpi-sub">Up/Down Trend Match</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Chart Window -->
+                <div class="glass-card chart-container">
+                    <div class="chart-header">
+                        <div>
+                            <h2 id="chartTitle">Actual vs. 3-Layer LSTM Predicted Prices</h2>
+                            <p class="chart-subtitle" id="assetSubtitle">NIFTY 50 Index (^NSEI) — 60-Day Sequence Horizon</p>
+                        </div>
+                        <div class="chart-actions">
+                            <span class="legend-badge actual-legend">● Actual Price</span>
+                            <span class="legend-badge pred-legend">-- LSTM Predicted</span>
+                        </div>
+                    </div>
+
+                    <div class="canvas-wrapper">
+                        <canvas id="stockChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Next-Day Forecast & Trading Signal Banner -->
+                <div class="glass-card forecast-banner" id="forecastBanner">
+                    <div class="forecast-left">
+                        <div class="signal-badge" id="signalBadge">
+                            <i class="fa-solid fa-arrow-trend-up"></i> <span id="signalText">BUY (BULLISH)</span>
+                        </div>
+                        <div>
+                            <span class="forecast-label">1-Day Ahead AI Forecast Price</span>
+                            <div class="forecast-price" id="forecastPrice">₹24,850.40</div>
+                        </div>
+                    </div>
+                    
+                    <div class="forecast-right">
+                        <div class="forecast-metric">
+                            <span class="f-label">Current Price</span>
+                            <span class="f-val" id="lastPrice">₹24,710.00</span>
+                        </div>
+                        <div class="forecast-metric">
+                            <span class="f-label">Expected Return</span>
+                            <span class="f-val positive" id="expectedReturn">+0.57%</span>
+                        </div>
+                        <div class="forecast-metric">
+                            <span class="f-label">Confidence</span>
+                            <span class="f-val" id="signalConfidence">HIGH</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Loading Overlay Modal -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="glass-card spinner-card">
+                <div class="spinner"></div>
+                <h3>Training 3-Layer LSTM Model...</h3>
+                <p>Fetching yfinance market data & running TensorFlow optimization...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/app.js"></script>
+</body>
+</html>

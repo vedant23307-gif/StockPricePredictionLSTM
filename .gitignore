@@ -1,0 +1,25 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment & Cache directories
+.keras/
+.matplotlib/
+.env
+venv/
+env/
+ENV/
+
+# Database & Log files
+*.db
+*.log
+nifty50_stocks.db
+run.log
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Temporary test scripts
+test_pipeline.py
