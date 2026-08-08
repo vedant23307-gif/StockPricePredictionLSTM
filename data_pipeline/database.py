@@ -8,7 +8,7 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 # Default Database Configuration
-POSTGRES_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/nifty50_db")
+POSTGRES_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:1234@localhost:5432/nifty50_db")
 SQLITE_DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "nifty50_stocks.db")
 SQLITE_URL = f"sqlite:///{os.path.abspath(SQLITE_DB_PATH)}"
 
